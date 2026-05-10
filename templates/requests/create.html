@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-section">
+    <div class="section-header">
+        <h1>Новая заявка</h1>
+        <p>Заполните поля ниже — заявка появится в списке.</p>
+    </div>
+
+    <div class="card request-form-card">
+        <form method="post" class="form-card">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="button button-primary">Отправить заявку</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{# Поиск и фильтры заявок (GET). show_author — для сотрудников; show_assignment — тех. панель #}
+<form class="request-filter-bar" method="get" action="{{ request.path }}">
+    <div class="filter-grid">
+        <label class="filter-field">
+            <span class="filter-label">Поиск</span>
+            <input
+                type="search"
+                name="q"
+                value="{{ request.GET.q|default:'' }}"
+                placeholder="Название или описание"
+                autocomplete="off"
+            >
+        </label>
+        <label class="filter-field">
+            <span class="filter-label">Статус</span>
+            <select name="status">
+                <option value="">Все</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="filter-field">
+            <span class="filter-label">Срочность</span>
+            <select name="urgency">
+                <option value="">Все</option>
+                {% for value, label in urgency_choices %}
+                    <option value="{{ value }}" {% if request.GET.urgency == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        {% if show_author %}
+            <label class="filter-field">
+                <span class="filter-label">Автор (логин)</span>
+                <input
+                    type="text"
+                    name="author"
+                    value="{{ request.GET.author|default:'' }}"
+                    placeholder="Часть имени"
+                    autocomplete="off"
+                >
+            </label>
+        {% endif %}
+        {% if show_assignment %}
+            <label class="filter-field">
+                <span class="filter-label">Назначение</span>
+                <select name="assignment">
+                    <option value="" {% if not request.GET.assignment %}selected{% endif %}>Все</option>
+                    <option value="unassigned" {% if request.GET.assignment == 'unassigned' %}selected{% endif %}>Свободные</option>
+                    <option value="mine" {% if request.GET.assignment == 'mine' %}selected{% endif %}>Мои</option>
+                </select>
+            </label>
+        {% endif %}
+    </div>
+    <div class="filter-actions">
+        <button type="submit" class="button button-primary">Применить</button>
+        <a class="button button-secondary" href="{{ request.path }}">Сбросить</a>
+    </div>
+</form>

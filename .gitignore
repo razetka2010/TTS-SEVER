@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Виртуальное окружение
+venv/
+.venv/
+env/
+
+# Django: локальные данные и секреты (никогда не коммитить)
+*.sqlite3
+*.db
+db.sqlite3
+.env
+.env.*
+!.env.example
+
+# Собранные статические файлы (collectstatic)
+staticfiles/
+
+# Загрузки пользователей (если появятся)
+media/
+
+# IDE / ОС
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Экран заявок — ТТС-Север{% endblock %}
+{% block body_class %}tv-board-body{% endblock %}
+{% block content %}
+<section
+    class="page-section tv-board-page"
+    data-requests-poll="tv"
+    data-requests-api-url="{% url 'requests_api_state' %}"
+    data-tv-secret="{{ tv_secret }}"
+    data-requests-poll-interval="5000"
+>
+    <div class="tv-board-header">
+        <div class="tv-board-header-text">
+            <h1 class="tv-board-title">Активные заявки</h1>
+            <p class="tv-board-subtitle">
+                Общая очередь без входа в систему: все <strong>новые</strong> и <strong>взятые техником</strong> заявки (не закрыты).
+                Принять или закрыть заявку можно в «Тех. панели» с телефона или ПК (под учётной записью техника).
+            </p>
+        </div>
+        <time class="tv-board-clock" id="tv-clock" datetime=""></time>
+    </div>
+
+    {% if requests %}
+        <div class="tv-board-grid">
+            {% for req in requests %}
+                <article
+                    class="card request-card tv-ticket-card {% if req.status == 'new' and not req.assigned_to %}tv-ticket-card--queue{% else %}tv-ticket-card--claimed{% endif %}"
+                    data-request-pk="{{ req.id }}"
+                >
+                    <div class="request-header tv-ticket-header">
+                        <div class="tv-ticket-heading">
+                            <span class="request-id tv-ticket-id">№{{ req.pk }}</span>
+                            <h2>{{ req.title }}</h2>
+                        </div>
+                        <span class="badge badge-{{ req.status }}" data-role="status-badge">{{ req.get_status_display }}</span>
+                    </div>
+
+                    <div class="request-meta tv-ticket-meta">
+                        <span>Срочность: <strong>{{ req.get_urgency_display }}</strong></span>
+                        <span>Автор: <strong>{{ req.created_by.username }}</strong></span>
+                        <span>Создано: {{ req.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+
+                    <p class="request-description tv-ticket-desc">{{ req.description }}</p>
+
+                    <p class="assigned-to tv-ticket-assigned" data-role="assigned-line"{% if not req.assigned_to %} hidden{% endif %}>
+                        Взял: <span data-role="assigned-name">{% if req.assigned_to %}{{ req.assigned_to.username }}{% endif %}</span>
+                    </p>
+                    <p class="assigned-to tv-ticket-comment request-comment-line" data-role="comment-line"{% if not req.comment %} hidden{% endif %}>
+                        Комментарий: <span data-role="comment-text">{{ req.comment }}</span>
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card tv-board-empty">
+            <p>Нет активных заявок — очередь пуста или всё уже закрыто.</p>
+            <p class="tv-board-empty-hint">Новая заявка с телефона появится здесь автоматически.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

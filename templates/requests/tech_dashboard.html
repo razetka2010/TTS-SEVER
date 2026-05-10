@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block content %}
+<section
+    class="page-section tech-dashboard-page"
+    data-tech-update-url="{% url 'tech_update_request' %}"
+    data-requests-poll="tech"
+    data-requests-api-url="{% url 'requests_api_state' %}"
+>
+    <div class="section-header">
+        <h1>Тех. панель</h1>
+        <p>Заявки, которые ещё не закрыты. Свободную заявку может взять любой техник; после сохранения она закрепляется за ним. Администратор может править любую. Номер заявки — системный, он уникален для всей базы (не путать с личным номером у автора).</p>
+    </div>
+
+    {% include 'requests/includes/filter_bar.html' with show_author=True show_assignment=True %}
+
+    {% if requests %}
+        <div class="tech-request-stack">
+            {% for req in requests %}
+                {% if user.role == 'admin' or not req.assigned_to or req.assigned_to_id == user.id %}
+                    <article class="card request-card tech-request-card" data-request-pk="{{ req.id }}">
+                {% else %}
+                    <article class="card request-card tech-request-card" data-request-pk="{{ req.id }}" data-locked="1">
+                {% endif %}
+                    <div class="request-header">
+                        <div>
+                            <span class="request-id">№{{ req.pk }}</span>
+                            <h2>{{ req.title }}</h2>
+                        </div>
+                        <span class="badge badge-{{ req.status }}" data-role="status-badge">{{ req.get_status_display }}</span>
+                    </div>
+
+                    <div class="request-meta">
+                        <span>Срочность: <strong>{{ req.get_urgency_display }}</strong></span>
+                        <span>Автор: <strong>{{ req.created_by.username }}</strong></span>
+                        <span>Создано: {{ req.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+
+                    <p class="request-description">{{ req.description }}</p>
+                    <p class="assigned-to" data-role="assigned-line"{% if not req.assigned_to %} hidden{% endif %}>
+                        Назначено: <span data-role="assigned-name">{% if req.assigned_to %}{{ req.assigned_to.username }}{% endif %}</span>
+                    </p>
+                    <p class="assigned-to tech-request-comment-line" data-role="comment-line"{% if not req.comment %} hidden{% endif %}>
+                        Комментарий: <span data-role="comment-text">{{ req.comment }}</span>
+                    </p>
+
+                    {% if user.role == 'admin' or not req.assigned_to or req.assigned_to_id == user.id %}
+                        <form method="post" class="tech-request-form" data-tech-ajax="1">
+                            {% csrf_token %}
+                            <input type="hidden" name="request_id" value="{{ req.id }}">
+                            <label for="action-{{ req.id }}">Новый статус</label>
+                            <select name="action" id="action-{{ req.id }}">
+                                {% for value, label in req.STATUS_CHOICES %}
+                                    <option value="{{ value }}" {% if req.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <label for="comment-{{ req.id }}">Комментарий</label>
+                            <textarea name="comment" id="comment-{{ req.id }}" placeholder="Комментарий для заявки (необязательно)">{% if req.comment %}{{ req.comment }}{% endif %}</textarea>
+                            <div class="form-actions">
+                                <button type="submit" class="button button-primary" data-role="save-btn">Сохранить</button>
+                                <span class="tech-save-hint" data-role="save-hint" hidden>Сохранено</span>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="tech-request-locked-note">
+                            <p>Заявку ведёт <strong>{{ req.assigned_to.username }}</strong>. Редактирование недоступно другим тех. администраторам.</p>
+                        </div>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card empty-state">
+            {% if filters_active %}
+                <p>По выбранным фильтрам активных заявок нет.</p>
+                <a href="{{ request.path }}" class="button button-secondary">Сбросить фильтры</a>
+            {% else %}
+                <p>Нет активных заявок — все выполнены или список пуст.</p>
+                <a href="{% url 'my_requests' %}" class="button button-secondary">К заявкам</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,74 @@
+﻿{% extends 'base.html' %}
+{% block content %}
+<section
+    class="page-section"
+    data-requests-poll="list"
+    data-requests-api-url="{% url 'requests_api_state' %}"
+>
+    <div class="section-header">
+        <h1>{% if user.role == 'user' %}Мои заявки{% else %}Заявки{% endif %}</h1>
+        <p>
+            {% if user.role == 'user' %}
+                Ваши заявки и их статус. Крупным номером — ваш личный счётчик; подпись «в системе №…» — общий номер для связи с техподдержкой.
+            {% else %}
+                Все заявки. Номер — системный (уникален в базе); у автора в его списке может отображаться свой порядковый номер.
+            {% endif %}
+        </p>
+    </div>
+
+    {% if user.role == 'user' %}
+        {% include 'requests/includes/filter_bar.html' with show_author=False show_assignment=False %}
+    {% else %}
+        {% include 'requests/includes/filter_bar.html' with show_author=True show_assignment=False %}
+    {% endif %}
+
+    {% if requests %}
+        <div class="grid-list">
+            {% for req in requests %}
+                <article class="card request-card" data-request-pk="{{ req.id }}">
+                    <div class="request-header">
+                        <div class="request-title-stack">
+                            <div class="request-id-row">
+                                <span class="request-id">№{% if user.role == 'user' %}{{ req.owner_number }}{% else %}{{ req.pk }}{% endif %}</span>
+                                {% if user.role == 'user' %}
+                                    <span class="request-system-id" title="Укажите этот номер при обращении к техподдержке">в системе №{{ req.pk }}</span>
+                                {% endif %}
+                            </div>
+                            <h2>{{ req.title }}</h2>
+                        </div>
+                        <span class="badge badge-{{ req.status }}" data-role="status-badge">{{ req.get_status_display }}</span>
+                    </div>
+
+                    <div class="request-meta">
+                        {% if user.role != 'user' %}
+                            <span>Автор: <strong>{{ req.created_by.username }}</strong></span>
+                        {% endif %}
+                        <span>Срочность: <strong>{{ req.get_urgency_display }}</strong></span>
+                        <span>Создано: {{ req.created_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <p class="request-description">{{ req.description }}</p>
+                    <p class="assigned-to" data-role="assigned-line"{% if not req.assigned_to %} hidden{% endif %}>
+                        Назначено: <span data-role="assigned-name">{% if req.assigned_to %}{{ req.assigned_to.username }}{% endif %}</span>
+                    </p>
+                    <p class="assigned-to request-comment-line" data-role="comment-line"{% if not req.comment %} hidden{% endif %}>
+                        Комментарий: <span data-role="comment-text">{{ req.comment }}</span>
+                    </p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card empty-state">
+            {% if filters_active %}
+                <p>По выбранным фильтрам заявок не найдено.</p>
+                <a href="{{ request.path }}" class="button button-secondary">Сбросить фильтры</a>
+            {% elif user.role == 'user' %}
+                <p>У вас ещё нет заявок. Создайте первую.</p>
+                <a href="{% url 'create_request' %}" class="button button-primary">Создать заявку</a>
+            {% else %}
+                <p>Заявок пока нет.</p>
+                <a href="{% url 'tech_dashboard' %}" class="button button-secondary">Тех. панель</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

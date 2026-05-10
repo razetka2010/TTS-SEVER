@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="page-section analytics-page">
+    <div class="section-header">
+        <h1>Аналитика</h1>
+        <p>Сводка по заявкам: сколько всего, распределение по статусам и срочности, список пользователей.</p>
+    </div>
+
+    {% if tv_board_url %}
+        <div class="card analytics-card analytics-card--tv">
+            <h2 class="analytics-card-title">Экран для телевизора</h2>
+            <p class="analytics-card-desc">
+                Открывается <strong>без входа</strong>. Сохраните ссылку в браузере на ТВ или приставке; ключ задаётся в настройках сервера (<code>TV_BOARD_SECRET</code> в .env).
+            </p>
+            <p class="analytics-tv-url"><code>{{ tv_board_url }}</code></p>
+        </div>
+    {% endif %}
+
+    <div class="grid-stats">
+        <div class="stat-card stat-card--total">
+            <p class="stat-label">Всего заявок</p>
+            <h2 class="stat-value">{{ total }}</h2>
+        </div>
+        <div class="stat-card stat-card--status">
+            <p class="stat-label">Статусов</p>
+            <h2 class="stat-value">{{ by_status|length }}</h2>
+        </div>
+        <div class="stat-card stat-card--urgency">
+            <p class="stat-label">Уровней срочности</p>
+            <h2 class="stat-value">{{ by_urgency|length }}</h2>
+        </div>
+    </div>
+
+    <div class="analytics-columns">
+        <div class="card analytics-card">
+            <h2 class="analytics-card-title">По статусу</h2>
+            <p class="analytics-card-desc">Сколько заявок в каждом состоянии.</p>
+            <div class="analytics-grid">
+                {% for name, count in by_status.items %}
+                    <div class="analytics-item">
+                        <span class="analytics-item-label">{{ name }}</span>
+                        <strong class="analytics-item-count">{{ count }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card analytics-card">
+            <h2 class="analytics-card-title">По срочности</h2>
+            <p class="analytics-card-desc">Распределение по приоритету.</p>
+            <div class="analytics-grid">
+                {% for name, count in by_urgency.items %}
+                    <div class="analytics-item">
+                        <span class="analytics-item-label">{{ name }}</span>
+                        <strong class="analytics-item-count">{{ count }}</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card analytics-card analytics-card--users">
+        <h2 class="analytics-card-title">Пользователи</h2>
+
+        <form class="request-filter-bar analytics-user-search" method="get" action="{{ request.path }}">
+            <div class="filter-grid filter-grid--compact">
+                <label class="filter-field">
+                    <span class="filter-label">Поиск по логину</span>
+                    <input type="search" name="uq" value="{{ user_search_q|default:'' }}" placeholder="Часть имени пользователя" autocomplete="off">
+                </label>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="button button-primary">Найти</button>
+                <a class="button button-secondary" href="{{ request.path }}">Сбросить</a>
+            </div>
+        </form>
+
+        {% if user_filters_active and not users %}
+            <p class="analytics-no-users">Пользователей по запросу не найдено.</p>
+        {% endif %}
+
+        <div class="admin-add-user">
+            <h3 class="admin-add-user-title">Добавить пользователя</h3>
+            <form method="post" class="form-card admin-add-user-form">
+                {% csrf_token %}
+                <input type="hidden" name="admin_create_user" value="1">
+                {% if add_user_form.non_field_errors %}
+                    <div class="alert error">{{ add_user_form.non_field_errors }}</div>
+                {% endif %}
+                {% for field in add_user_form %}
+                    <p>
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}<span class="field-errors">{{ field.errors }}</span>{% endif %}
+                    </p>
+                {% endfor %}
+                <div class="form-actions">
+                    <button type="submit" class="button button-primary">Создать учётную запись</button>
+                </div>
+            </form>
+        </div>
+
+        <ul class="user-list user-list--analytics">
+            {% for user in users %}
+                <li>
+                    <span class="user-list-name">{{ user.username }}</span>
+                    <span class="role-pill role-{{ user.role }}">{{ user.get_role_display }}</span>
+                </li>
+            {% empty %}
+                <li class="user-list-empty">Нет пользователей.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}

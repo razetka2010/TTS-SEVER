@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-fill">
+    <section class="card auth-card">
+        <div class="section-header">
+            <h1>Вход</h1>
+            <p>Войдите в систему ТТС-Север для работы с заявками.</p>
+        </div>
+        <form method="post" class="form-card">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="button button-primary">Войти</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}
